@@ -1,5 +1,6 @@
 import { Request,Response} from "express";
 import {PrismaClient} from '@prisma/client';
+import { timeStamp } from "console";
 
 
 const prisma = new PrismaClient();
@@ -84,6 +85,22 @@ export const arriveBooking = async (req: Request,res: Response)=>{
         res.status(200).json({success: true,booking});
     }catch(err){
         res.status(500).json({ error: "Failed to mark booking as arrived" });
+    }
+};
+
+
+// getbokingHistory 
+
+export const getBookingHistory = async(req: Request,res: Response)=>{
+    try{
+        const {refId}=req.params;
+        const booking = await prisma.booking.findUnique({
+            where: {refId},
+            include: {events: {orderBy: {timeStamp:"asc"}}},
+        });
+        res.status(200).json({success: true,booking});
+    }catch(err){
+        res.status(500).json({ error: "Failed to fetch booking history" });
     }
 };
 
