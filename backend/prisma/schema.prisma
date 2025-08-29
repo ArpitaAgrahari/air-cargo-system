@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// -------------------- FLIGHTS --------------------
+model Flight {
+  id          Int          @id @default(autoincrement())
+  flightNo    String       @unique
+  origin      String
+  destination String
+  capacity    Int
+  status      FlightStatus @default(SCHEDULED)
+  departureAt DateTime
+  arrivalAt   DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  bookings    FlightBooking[]
+}
+
+model FlightBooking {
+  id         Int      @id @default(autoincrement())
+  bookingId  Int
+  flightId   Int
+  assignedAt DateTime @default(now())
+
+  flight  Flight  @relation(fields: [flightId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
+}
+
+enum FlightStatus {
+  SCHEDULED
+  DEPARTED
+  ARRIVED
+  CANCELLED
+}
+
+//
+// -------------------- BOOKINGS --------------------
+model Booking {
+  id          Int            @id @default(autoincrement())
+  refId       String         @unique
+  origin      String
+  destination String
+  pieces      Int
+  weightKg    Int
+  status      BookingStatus  @default(BOOKED)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  events      BookingEvent[]
+  flights     FlightBooking[]
+}
+
+model BookingEvent {
+  id        Int        @id @default(autoincrement())
+  type      EventType
+  location  String
+  timestamp DateTime   @default(now())
+  bookingId Int
+  booking   Booking    @relation(fields: [bookingId], references: [id])
+}
+
+enum BookingStatus {
+  BOOKED
+  DEPARTED
+  ARRIVED
+  DELIVERED
+  CANCELLED
+}
+
+enum EventType {
+  BOOKED
+  DEPARTED
+  ARRIVED
+  CANCELLED
+}
+
+//
+// -------------------- TRACKING --------------------
+// (Tracking events can be seen as BookingEvents v2, 
+// but if you want separate table, keep as below)
+
+model TrackingEvent {
+  id        String   @id @default(uuid())
+  bookingId Int
+  eventType String   // BOOKED, DEPARTED, ARRIVED, DELIVERED
+  location  String?
+  flightId  Int?
+  createdAt DateTime @default(now())
+
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+}
