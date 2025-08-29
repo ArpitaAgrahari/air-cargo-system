@@ -1,5 +1,3 @@
-// src/controllers/staff.controller.ts
-
 import { Request, Response } from 'express';
 import { ApiResponse, PaginatedApiResponse } from '../types/api.types';
 import * as bookingService from '../services/booking.service';

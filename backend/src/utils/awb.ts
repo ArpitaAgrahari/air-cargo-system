@@ -4,8 +4,12 @@ export const generateAwbNumber = (airlinePrefix: string): string => {
     throw new Error('Airline prefix must be exactly 3 characters long.');
   }
 
-  // Generate a simple 8-digit random number for the serial part
-  const randomSerial = Math.floor(10000000 + Math.random() * 90000000).toString();
+  //random 7-digit number
+  const sevenDigitNumber = Math.floor(1000000 + Math.random() * 9000000);
 
-  return `${airlinePrefix}-${randomSerial}`;
+  // Calculate the check digit (remainder of 7-digit number divided by 7)
+  const checkDigit = sevenDigitNumber % 7;
+
+  // AWBnumber parts: IATA code + 7-digit number + check digit
+  return `${airlinePrefix}${sevenDigitNumber}${checkDigit}`;
 };
