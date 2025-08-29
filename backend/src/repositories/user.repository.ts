@@ -23,10 +23,10 @@ export const findUsers = async (page: number, limit: number): Promise<{ users: U
   return { users, total };
 };
 
-export const findUserById = async (id: string): Promise<User | null> => {
+export const findUserById = async (id: string): Promise<User | null> => { // Changed id to string
     return prisma.user.findUnique({ where: { id } });
 };
 
-export const updateUser = async (id: string, data: Prisma.UserUpdateInput): Promise<User> => {
+export const updateUser = async (id: string, data: Prisma.UserUpdateInput): Promise<User> => { // Changed id to string
     return prisma.user.update({ where: { id }, data });
 };
