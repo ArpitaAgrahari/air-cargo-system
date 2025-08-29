@@ -105,3 +105,34 @@ export const getBookingHistory = async(req: Request,res: Response)=>{
 };
 
 
+//cancelBooking
+
+export const cancelBooking = async(req:Request,res:Response)=>{
+    try{
+        const {refId}=req.params;
+
+        const booking = await prisma.booking.findUnique({where: {refId}});
+
+        if(!booking) return res.status(404).json({error: "Booking not found" });
+
+        if(booking.status === "ARRIVED")
+            return res.status(400).json({ error: "Cannot cancel after arrival" });
+
+        const updatedBooking = await prisma.booking.update({
+            where: { refId },
+            data: { status:"CANCELLED"},
+        });
+
+        await prisma.bookingEvent.create({
+            data:{
+                type: "CANCELLED",
+                location: booking.origin,
+                bookingId: booking.id,
+            },
+        });
+
+        res.status(200).json({success: true,updatedBooking});
+    }catch(err){
+        res.status(500).json({ error: "Failed to cancel booking" });
+    }
+};

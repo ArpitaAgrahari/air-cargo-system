@@ -8,6 +8,6 @@ router.post("/", bookingController.createBooking);
 router.post("/:refId/depart", bookingController.departBooking);
 router.post("/:refId/arrive", bookingController.arriveBooking);
 router.get("/:refId", bookingController.getBookingHistory);
-
+router.post("/:refId/cancel", bookingController.cancelBooking);
 
 export default router;
