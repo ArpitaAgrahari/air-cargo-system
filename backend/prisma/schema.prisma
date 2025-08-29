@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,62 +8,100 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//
-// -------------------- FLIGHTS --------------------
+// BetterAuth's User model often uses a string ID (cuid or uuid)
+
+model User {
+  id    String   @id @default(cuid()) // Changed to String and @default(cuid())
+  name  String
+  email String   @unique
+  role  UserRole
+
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  bookings                Booking[] // Inverse relation for Booking
+  sessions                Session[] // Inverse relation for BetterAuth Sessions
+  emailVerificationTokens EmailVerificationToken[] // Inverse relation for BetterAuth EmailVerificationTokens
+  emailVerified           Boolean
+  image                   String?
+  accounts                Account[]
+
+  @@map("user")
+}
+
+// These models are typically managed by BetterAuth's Prisma adapter
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String // Must match User.id type
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String
+  ipAddress String?
+  userAgent String?
+
+  @@unique([token])
+  @@map("session")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String // Must match User.id type
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model Flight {
-  id          Int          @id @default(autoincrement())
-  flightNo    String       @unique
-  origin      String
-  destination String
-  capacity    Int
-  status      FlightStatus @default(SCHEDULED)
-  departureAt DateTime
-  arrivalAt   DateTime
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  bookings    FlightBooking[]
+  id                     Int       @id @default(autoincrement())
+  flightNumber           String
+  airlineName            String
+  awbPrefix              String?
+  originAirportCode      String
+  destinationAirportCode String
+  departureDatetime      DateTime
+  arrivalDatetime        DateTime
+  bookings               Booking[]
 }
 
-model FlightBooking {
-  id         Int      @id @default(autoincrement())
-  bookingId  Int
-  flightId   Int
-  assignedAt DateTime @default(now())
-
-  flight  Flight  @relation(fields: [flightId], references: [id])
-  booking Booking @relation(fields: [bookingId], references: [id])
-}
-
-enum FlightStatus {
-  SCHEDULED
-  DEPARTED
-  ARRIVED
-  CANCELLED
-}
-
-//
-// -------------------- BOOKINGS --------------------
 model Booking {
-  id          Int            @id @default(autoincrement())
-  refId       String         @unique
-  origin      String
-  destination String
-  pieces      Int
-  weightKg    Int
-  status      BookingStatus  @default(BOOKED)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  events      BookingEvent[]
-  flights     FlightBooking[]
+  id                     Int           @id @default(autoincrement())
+  refId                  String        @unique @default(cuid()) // Human-friendly, unique ID.
+  originAirportCode      String
+  destinationAirportCode String
+  pieces                 Int
+  weightKg               Int
+  status                 BookingStatus @default(BOOKED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customerId String // Changed to String to match User.id
+  customer   User    @relation(fields: [customerId], references: [id])
+  flightId   Int?
+  flight     Flight? @relation(fields: [flightId], references: [id])
+
+  events BookingEvent[]
 }
 
 model BookingEvent {
-  id        Int        @id @default(autoincrement())
-  type      EventType
-  location  String
-  timestamp DateTime   @default(now())
+  id        Int           @id @default(autoincrement())
+  eventType BookingStatus
+  location  String?
+  timestamp DateTime      @default(now())
+  details   Json? // To store optional flight info or other details.
+
   bookingId Int
-  booking   Booking    @relation(fields: [bookingId], references: [id])
+  booking   Booking @relation(fields: [bookingId], references: [id])
+}
+
+enum UserRole {
+  CUSTOMER
+  STAFF
+  ADMIN
 }
 
 enum BookingStatus {
@@ -73,25 +112,32 @@ enum BookingStatus {
   CANCELLED
 }
 
-enum EventType {
-  BOOKED
-  DEPARTED
-  ARRIVED
-  CANCELLED
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
 }
 
-//
-// -------------------- TRACKING --------------------
-// (Tracking events can be seen as BookingEvents v2, 
-// but if you want separate table, keep as below)
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
 
-model TrackingEvent {
-  id        String   @id @default(uuid())
-  bookingId Int
-  eventType String   // BOOKED, DEPARTED, ARRIVED, DELIVERED
-  location  String?
-  flightId  Int?
-  createdAt DateTime @default(now())
-
-  booking   Booking  @relation(fields: [bookingId], references: [id])
+  @@map("verification")
 }
