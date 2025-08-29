@@ -1,9 +1,5 @@
 import { Request,Response} from "express";
-import {PrismaClient} from '@prisma/client';
-import { timeStamp } from "console";
-
-
-const prisma = new PrismaClient();
+import prisma from "../../shared/config/db";
 
 //createBooking controller
 
