@@ -4,6 +4,7 @@ import {PrismaClient} from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+//createBooking controller
 
 export const createBooking = async (req: Request, res: Response) => {
     try{
@@ -33,4 +34,30 @@ export const createBooking = async (req: Request, res: Response) => {
 };
 
 
+
+
+// departbooking controller
+
+export const departBooking = async(req:Request,res:Response)=>{
+    try{
+        const {refId} = req.params;
+
+        const booking = await prisma.booking.update({
+            where: {refId},
+            data: {status: "DEPARTED"},
+        });
+
+        await prisma.bookingEvent.create({
+            data:{
+                type: "DEPARTED",
+                location: booking.origin,
+                bookingId: booking.id,
+            },
+        });
+
+        res.status(200).json({success: true,booking});
+    }catch(err){
+        res.status(500).json({ error: "Failed to mark booking as departed" });
+    }
+};
 

@@ -5,6 +5,7 @@ import * as bookingController from '../controllers/bookingController';
 const router=express.Router();
 
 router.post("/", bookingController.createBooking);
+router.post("/:refId/depart", bookingController.departBooking);
 
 
 export default router;
