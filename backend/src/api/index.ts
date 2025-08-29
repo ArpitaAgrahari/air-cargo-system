@@ -1,24 +1,38 @@
 import express from 'express';
-import dotenv from 'dotenv';
-import routes from './routes';
-import { errorHandler } from '../shared/middlewares/errorHandler';
+import {createProxyMiddleware} from 'http-proxy-middleware'; 
 
-dotenv.config();
-
-const app=express();
-const PORT = process.env.PORT || 8000;
-
-app.use(express.json());
+const router = express.Router();
 
 
-//Routes
-app.use("/api",routes);
+//booking-service proxy
+router.use(
+    "/bookings",
+    createProxyMiddleware({
+        target : process.env.BOOKING_SERVICE_URL,
+        changeOrigin: true,
+        pathRewrite: {"^/api/bookings":""}
+    })
+);
+
+//flight-service proxy
+router.use(
+    "/flights",
+    createProxyMiddleware({
+        target: process.env.FLIGHT_SERVICE_URL,
+        changeOrigin: true,
+        pathRewrite : {"^/api/flights":""}
+    })
+);
+
+//tracking-service proxy
+router.use(
+    "/trackings",
+    createProxyMiddleware({
+        target: process.env.TRACKING_SERVICE_URL,
+        changeOrigin: true,
+        pathRewrite : {"^/api/tracking":""}
+    })
+);
 
 
-//error-handling
-app.use(errorHandler);
-
-
-app.listen(PORT, ()=>{
-    console.log(`API running on port ${PORT}`);
-});
+export default router;
