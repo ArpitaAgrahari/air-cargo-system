@@ -3,6 +3,7 @@ import { ApiResponse, PaginatedApiResponse } from '../types/api.types';
 import { Flight, Prisma, UserRole } from '@prisma/client';
 import * as flightRepository from '../repositories/flight.repository';
 import * as userRepository from '../repositories/user.repository';
+import { validateAddFlightRequest, validateUpdateFlightRequest } from '../validators/flight.validator'; 
 
 export const getFlights = async (req: Request, res: Response) => {
     try {
@@ -11,7 +12,7 @@ export const getFlights = async (req: Request, res: Response) => {
 
         const { flights, total } = await flightRepository.findFlights(page, limit);
         const totalPages = Math.ceil(total / limit);
-
+        
         const response: PaginatedApiResponse<Flight> = {
             success: true,
             message: 'Flights fetched successfully.',
@@ -27,17 +28,33 @@ export const getFlights = async (req: Request, res: Response) => {
 
 export const addFlight = async (req: Request, res: Response) => {
     try {
-        const { flight_number, airline_name, origin_airport_code, destination_airport_code, departure_datetime, arrival_datetime } = req.body;
-
+        validateAddFlightRequest(req.body); 
+        const {
+            flightNumber,
+            airlineName,
+            awbPrefix,
+            originAirportCode,
+            destinationAirportCode,
+            departureDatetime,
+            arrivalDatetime,
+            maxCapacityWeightKg, 
+            maxCapacityPieces,   
+            overbookingPercentage, 
+        } = req.body;
+        
         const newFlight = await flightRepository.createFlight({
-            flightNumber: flight_number,
-            airlineName: airline_name,
-            originAirportCode: origin_airport_code,
-            destinationAirportCode: destination_airport_code,
-            departureDatetime: new Date(departure_datetime),
-            arrivalDatetime: new Date(arrival_datetime),
+            flightNumber,
+            airlineName,
+            awbPrefix,
+            originAirportCode,
+            destinationAirportCode,
+            departureDatetime: new Date(departureDatetime),
+            arrivalDatetime: new Date(arrivalDatetime),
+            maxCapacityWeightKg,
+            maxCapacityPieces,
+            overbookingPercentage,
         });
-
+        
         const response: ApiResponse<Flight> = {
             success: true,
             message: 'Flight added successfully.',
@@ -53,10 +70,11 @@ export const addFlight = async (req: Request, res: Response) => {
 export const updateFlight = async (req: Request, res: Response) => {
     try {
         const flightId = parseInt(req.params.flightId);
+        validateUpdateFlightRequest(req.body);
         const updatedData: Prisma.FlightUpdateInput = req.body;
-
+        
         const updatedFlight = await flightRepository.updateFlight(flightId, updatedData);
-
+        
         const response: ApiResponse<Flight> = {
             success: true,
             message: 'Flight updated successfully.',
@@ -79,7 +97,7 @@ export const getUsers = async (req: Request, res: Response) => {
 
     const { users, total } = await userRepository.findUsers(page, limit);
     const totalPages = Math.ceil(total / limit);
-
+    
     const response: PaginatedApiResponse<any> = {
         success: true,
         message: 'Users fetched successfully.',
@@ -95,12 +113,13 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const createUser = async (req: Request, res: Response) => {
     try {
-        const { name, email, role, password } = req.body;
-
+        const { name, email, role } = req.body;
+        
         const newUser = await userRepository.createUser({
             name,
             email,
-            role
+            role,
+            emailVerified: false
         });
 
         const response: ApiResponse<any> = {
@@ -117,11 +136,11 @@ export const createUser = async (req: Request, res: Response) => {
 
 export const updateUser = async (req: Request, res: Response) => {
     try {
-        const userId = req.params.userId;
+        const userId = parseInt(req.params.userId);
         const updatedData: Prisma.UserUpdateInput = req.body;
-
-        const updatedUser = await userRepository.updateUser(userId, updatedData);
-
+        
+        const updatedUser = await userRepository.updateUser(userId.toString(), updatedData);
+        
         const response: ApiResponse<any> = {
             success: true,
             message: 'User updated successfully.',
