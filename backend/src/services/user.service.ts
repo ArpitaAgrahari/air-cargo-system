@@ -9,6 +9,6 @@ export const createUser = async (data: Prisma.UserCreateInput): Promise<User> =>
   return userRepository.createUser(data);
 };
 
-export const updateUser = async (id: number, data: Prisma.UserUpdateInput): Promise<User> => {
-  return userRepository.updateUser(id.toString(), data);
+export const updateUser = async (id: string, data: Prisma.UserUpdateInput): Promise<User> => { // Changed id to string
+  return userRepository.updateUser(id, data);
 };
