@@ -56,7 +56,7 @@ model EmailVerificationToken {
 }
 
 model Flight {
-  id                     Int       @id @default(autoincrement())
+  id                     Int        @id @default(autoincrement())
   flightNumber           String
   airlineName            String
   awbPrefix              String?
@@ -64,6 +64,16 @@ model Flight {
   destinationAirportCode String
   departureDatetime      DateTime
   arrivalDatetime        DateTime
+
+  // fields for capacity
+  maxCapacityWeightKg    Int       @default(0) // Maximum weight capacity of the flight
+  maxCapacityPieces      Int       @default(0) // Maximum number of pieces capacity of the flight
+  overbookingPercentage  Float     @default(0.0) // e.g., 0.10 for 10% overbooking
+
+  // fields to track current booked capacity (managed by the system)
+  currentBookedWeightKg  Int       @default(0)
+  currentBookedPieces    Int       @default(0)
+
   bookings               Booking[]
 }
 

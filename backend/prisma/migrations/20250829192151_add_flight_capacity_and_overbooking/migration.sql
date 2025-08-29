@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "Flight" ADD COLUMN     "currentBookedPieces" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "currentBookedWeightKg" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "maxCapacityPieces" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "maxCapacityWeightKg" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "overbookingPercentage" DOUBLE PRECISION NOT NULL DEFAULT 0.0;
