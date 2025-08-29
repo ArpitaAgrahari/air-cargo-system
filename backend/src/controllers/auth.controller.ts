@@ -18,6 +18,7 @@ export const register = async (req: Request, res: Response) => {
       name,
       email,
       role,
+      emailVerified: false,
     });
 
     const response: ApiResponse<any> = {
