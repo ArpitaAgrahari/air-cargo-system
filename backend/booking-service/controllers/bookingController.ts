@@ -61,3 +61,30 @@ export const departBooking = async(req:Request,res:Response)=>{
     }
 };
 
+
+
+// arrivebooking contorller
+
+export const arriveBooking = async (req: Request,res: Response)=>{
+    try{
+        const {refId}=req.params;
+
+        const booking = await prisma.booking.update({
+            where: {refId},
+            data: {status: "ARRIVED"},
+        });
+
+        await prisma.bookingEvent.create({
+            data:{
+                type: "ARRIVED",
+                location: booking.destination,
+                bookingId: booking.id,
+            },
+        });
+        res.status(200).json({success: true,booking});
+    }catch(err){
+        res.status(500).json({ error: "Failed to mark booking as arrived" });
+    }
+};
+
+

@@ -6,6 +6,7 @@ const router=express.Router();
 
 router.post("/", bookingController.createBooking);
 router.post("/:refId/depart", bookingController.departBooking);
+router.post("/:refId/arrive", bookingController.arriveBooking);
 
 
 export default router;
