@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ApiResponse, PaginatedApiResponse } from '../types/api.types';
-import { Flight, Prisma, UserRole } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import * as flightRepository from '../repositories/flight.repository';
 import * as userRepository from '../repositories/user.repository';
 import { validateAddFlightRequest, validateUpdateFlightRequest } from '../validators/flight.validator'; 
@@ -13,7 +13,7 @@ export const getFlights = async (req: Request, res: Response) => {
         const { flights, total } = await flightRepository.findFlights(page, limit);
         const totalPages = Math.ceil(total / limit);
         
-        const response: PaginatedApiResponse<Flight> = {
+        const response: PaginatedApiResponse<any> = {
             success: true,
             message: 'Flights fetched successfully.',
             data: flights,
@@ -55,7 +55,7 @@ export const addFlight = async (req: Request, res: Response) => {
             overbookingPercentage,
         });
         
-        const response: ApiResponse<Flight> = {
+        const response: ApiResponse<any> = {
             success: true,
             message: 'Flight added successfully.',
             data: newFlight,
@@ -71,11 +71,11 @@ export const updateFlight = async (req: Request, res: Response) => {
     try {
         const flightId = parseInt(req.params.flightId);
         validateUpdateFlightRequest(req.body);
-        const updatedData: Prisma.FlightUpdateInput = req.body;
+        const updatedData: any = req.body;
         
         const updatedFlight = await flightRepository.updateFlight(flightId, updatedData);
         
-        const response: ApiResponse<Flight> = {
+        const response: ApiResponse<any> = {
             success: true,
             message: 'Flight updated successfully.',
             data: updatedFlight,
@@ -114,12 +114,18 @@ export const getUsers = async (req: Request, res: Response) => {
 export const createUser = async (req: Request, res: Response) => {
     try {
         const { name, email, role } = req.body;
+        const id = globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        const createdAt = new Date();
+        const updatedAt = createdAt;
         
         const newUser = await userRepository.createUser({
+            id,
             name,
             email,
             role,
-            emailVerified: false
+            emailVerified: false,
+            createdAt,
+            updatedAt,
         });
 
         const response: ApiResponse<any> = {
