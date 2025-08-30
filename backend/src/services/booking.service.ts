@@ -1,4 +1,4 @@
-import { PrismaClient, Booking, BookingStatus, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import * as bookingRepository from '../repositories/booking.repository';
 import * as flightRepository from '../repositories/flight.repository';
 import { generateAwbNumber } from '../utils/awb';
@@ -12,7 +12,7 @@ export const createNewBooking = async (
   pieces: number,
   weight: number,
   flightId: number
-): Promise<Booking> => {
+): Promise<any> => {
   const flight = await flightRepository.getFlightWithCapacity(flightId);
   if (!flight) {
     throw new Error('Flight not found.');
@@ -73,7 +73,7 @@ export const getBookingHistory = async (awb_no: string) => {
 
 export const updateBookingAndAddEvent = async (
   awb_no: string,
-  newStatus: BookingStatus,
+  newStatus: string,
   location?: string,
   flightId?: number
 ) => {
@@ -127,7 +127,7 @@ export const updateBookingAndAddEvent = async (
   return updatedBooking;
 };
 
-export const getBookingsForCustomer = async (customerId: number): Promise<Booking[]> => {
+export const getBookingsForCustomer = async (customerId: string): Promise<any[]> => {
   return bookingRepository.findBookingsByCustomerId(customerId);
 };
 
