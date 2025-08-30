@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../auth/auth.middleware';
-import { UserRole } from '@prisma/client';
+import { USER_ROLES } from '../../constants';
 import { getBookings, getRoutes, createBooking } from '../../controllers/customer.controller';
 import { getBookingHistory } from '../../controllers/booking.controller';
 
@@ -10,7 +10,7 @@ const router = Router();
 router.get('/bookings/track/:awb_no', getBookingHistory);
 
 // Protected routes for customers
-router.use(authenticate, authorize([UserRole.CUSTOMER]));
+router.use(authenticate, authorize([USER_ROLES.CUSTOMER]));
 router.get('/bookings', getBookings);
 router.get('/routes', getRoutes);
 router.post('/bookings/create', createBooking);

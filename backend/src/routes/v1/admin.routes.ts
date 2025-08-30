@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../auth/auth.middleware';
-import { UserRole } from '@prisma/client';
+import { USER_ROLES } from '../../constants';
 import {
   getUsers,
   createUser,
@@ -12,7 +12,7 @@ import {
 
 const router = Router();
 
-router.use(authenticate, authorize([UserRole.ADMIN]));
+router.use(authenticate, authorize([USER_ROLES.ADMIN]));
 router.get('/users', getUsers);
 router.post('/users', createUser);
 router.put('/users/:userId', updateUser);
