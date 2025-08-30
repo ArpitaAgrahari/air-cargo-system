@@ -1,12 +1,12 @@
-import { PrismaClient, Booking, BookingEvent, Prisma, BookingStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient() as any;
 
-export const createBooking = async (data: Prisma.BookingCreateInput): Promise<Booking> => {
+export const createBooking = async (data: any): Promise<any> => {
   return prisma.booking.create({ data });
 };
 
-export const findBookingByRefId = async (refId: string): Promise<Booking | null> => {
+export const findBookingByRefId = async (refId: string): Promise<any | null> => {
   return prisma.booking.findUnique({
     where: { refId },
     include: {
@@ -19,7 +19,7 @@ export const findBookingByRefId = async (refId: string): Promise<Booking | null>
   });
 };
 
-export const updateBookingStatus = async (refId: string, status: BookingStatus): Promise<Booking> => {
+export const updateBookingStatus = async (refId: string, status: string): Promise<any> => {
   return prisma.booking.update({
     where: { refId },
     data: { status },
@@ -28,10 +28,10 @@ export const updateBookingStatus = async (refId: string, status: BookingStatus):
 
 export const addBookingEvent = async (
   bookingId: number,
-  eventType: BookingStatus,
+  eventType: string,
   location: string,
   details: any
-): Promise<BookingEvent> => {
+): Promise<any> => {
   return prisma.bookingEvent.create({
     data: {
       bookingId,
@@ -42,9 +42,9 @@ export const addBookingEvent = async (
   });
 };
 
-export const findBookings = async (page: number, limit: number, awb?: string): Promise<{ bookings: Booking[], total: number }> => {
+export const findBookings = async (page: number, limit: number, awb?: string): Promise<{ bookings: any[], total: number }> => {
   const skip = (page - 1) * limit;
-  const where: Prisma.BookingWhereInput = awb ? { refId: { contains: awb, mode: 'insensitive' } } : {};
+  const where: any = awb ? { refId: { contains: awb, mode: 'insensitive' } } : {};
 
   const [bookings, total] = await prisma.$transaction([
     prisma.booking.findMany({
@@ -60,9 +60,9 @@ export const findBookings = async (page: number, limit: number, awb?: string): P
   return { bookings, total };
 };
 
-export const findBookingsByCustomerId = async (customerId: number): Promise<Booking[]> => {
+export const findBookingsByCustomerId = async (customerId: string): Promise<any[]> => {
     return prisma.booking.findMany({
-        where: { customerId: customerId.toString() },
+        where: { customerId },
         orderBy: { createdAt: 'desc' },
     });
 };
