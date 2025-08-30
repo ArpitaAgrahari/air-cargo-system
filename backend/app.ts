@@ -6,15 +6,12 @@ import cors from 'cors';
 
 const app: Express = express();
 
-// Middleware
 app.use(express.json()); 
 app.use(cors());         
 
-// API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1', v1Routes);
 
-// Global Error Handler Middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   const response: FailedResponse = {
     success: false,
