@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { ApiResponse, PaginatedApiResponse } from '../types/api.types';
 import * as bookingService from '../services/booking.service';
 import { validateUpdateBookingRequest } from '../validators/booking.validator';
-import { BookingStatus } from '@prisma/client';
 
 export const getAllBookings = async (req: Request, res: Response) => {
   try {
@@ -38,7 +37,7 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
 
     const updatedBooking = await bookingService.updateBookingAndAddEvent(
       awb_no,
-      new_status as BookingStatus,
+      new_status as any,
       location,
       flight_id
     );
