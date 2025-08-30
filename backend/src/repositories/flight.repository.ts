@@ -1,15 +1,15 @@
-import { PrismaClient, Flight, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
-const standalonePrisma = new PrismaClient();
+const standalonePrisma = new PrismaClient() as any;
 
-const getClient = (tx?: PrismaClient | Prisma.TransactionClient) => tx || standalonePrisma;
+const getClient = (tx?: any) => tx || standalonePrisma;
 
 export const findDirectFlights = async (
   origin: string,
   destination: string,
   departureDate: Date,
-  tx?: PrismaClient | Prisma.TransactionClient
-): Promise<Flight[]> => {
+  tx?: any
+): Promise<any[]> => {
   const endOfDay = new Date(departureDate);
   endOfDay.setHours(23, 59, 59, 999);
 
@@ -28,8 +28,8 @@ export const findDirectFlights = async (
 export const findFlightsByOriginAndDate = async (
   origin: string,
   departureDate: Date,
-  tx?: PrismaClient | Prisma.TransactionClient
-): Promise<Flight[]> => {
+  tx?: any
+): Promise<any[]> => {
   const nextDay = new Date(departureDate);
   nextDay.setDate(nextDay.getDate() + 1);
   nextDay.setHours(23, 59, 59, 999);
@@ -47,16 +47,16 @@ export const findFlightsByOriginAndDate = async (
 
 export const findFlightById = async (
   id: number,
-  tx?: PrismaClient | Prisma.TransactionClient
-): Promise<Flight | null> => {
+  tx?: any
+): Promise<any | null> => {
   return getClient(tx).flight.findUnique({ where: { id } });
 };
 
 //flight with capacity-related fields
 export const getFlightWithCapacity = async (
   flightId: number,
-  tx?: PrismaClient | Prisma.TransactionClient
-): Promise<Flight | null> => {
+  tx?: any
+): Promise<any | null> => {
   return getClient(tx).flight.findUnique({
     where: { id: flightId },
     select: {
@@ -82,8 +82,8 @@ export const updateFlightBookedCapacity = async (
   flightId: number,
   weightChange: number, 
   piecesChange: number, 
-  tx?: PrismaClient | Prisma.TransactionClient
-): Promise<Flight> => {
+  tx?: any
+): Promise<any> => {
   return getClient(tx).flight.update({
     where: { id: flightId },
     data: {
@@ -93,7 +93,7 @@ export const updateFlightBookedCapacity = async (
   });
 };
 
-export const findFlights = async (page: number, limit: number): Promise<{ flights: Flight[], total: number }> => {
+export const findFlights = async (page: number, limit: number): Promise<{ flights: any[], total: number }> => {
   const skip = (page - 1) * limit;
   const [flights, total] = await standalonePrisma.$transaction([
     standalonePrisma.flight.findMany({
@@ -106,9 +106,9 @@ export const findFlights = async (page: number, limit: number): Promise<{ flight
   return { flights, total };
 };
 
-export const createFlight = async (data: Prisma.FlightCreateInput): Promise<Flight> => {
+export const createFlight = async (data: any): Promise<any> => {
   // default capacity values are set if not provided
-  const createData: Prisma.FlightCreateInput = {
+  const createData: any = {
     ...data,
     currentBookedWeightKg: data.currentBookedWeightKg ?? 0,
     currentBookedPieces: data.currentBookedPieces ?? 0,
@@ -119,6 +119,6 @@ export const createFlight = async (data: Prisma.FlightCreateInput): Promise<Flig
   return standalonePrisma.flight.create({ data: createData });
 };
 
-export const updateFlight = async (id: number, data: Prisma.FlightUpdateInput): Promise<Flight> => {
+export const updateFlight = async (id: number, data: any): Promise<any> => {
   return standalonePrisma.flight.update({ where: { id }, data });
 };
