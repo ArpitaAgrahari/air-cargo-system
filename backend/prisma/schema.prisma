@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,104 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// BetterAuth's User model often uses a string ID (cuid or uuid)
-
-model User {
-  id    String   @id @default(cuid()) // Changed to String and @default(cuid())
-  name  String
-  email String   @unique
-  role  UserRole
-
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @updatedAt
-  bookings                Booking[] // Inverse relation for Booking
-  sessions                Session[] // Inverse relation for BetterAuth Sessions
-  emailVerificationTokens EmailVerificationToken[] // Inverse relation for BetterAuth EmailVerificationTokens
-  emailVerified           Boolean
-  image                   String?
-  accounts                Account[]
-
-  @@map("user")
-}
-
-// These models are typically managed by BetterAuth's Prisma adapter
-
-model Session {
-  id        String   @id @default(cuid())
-  userId    String // Must match User.id type
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String
-  ipAddress String?
-  userAgent String?
-
-  @@unique([token])
-  @@map("session")
-}
-
-model EmailVerificationToken {
-  id        String   @id @default(cuid())
-  userId    String // Must match User.id type
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Flight {
-  id                     Int        @id @default(autoincrement())
-  flightNumber           String
-  airlineName            String
-  awbPrefix              String?
-  originAirportCode      String
-  destinationAirportCode String
-  departureDatetime      DateTime
-  arrivalDatetime        DateTime
-
-  // fields for capacity
-  maxCapacityWeightKg    Int       @default(0) // Maximum weight capacity of the flight
-  maxCapacityPieces      Int       @default(0) // Maximum number of pieces capacity of the flight
-  overbookingPercentage  Float     @default(0.0) // e.g., 0.10 for 10% overbooking
-
-  // fields to track current booked capacity (managed by the system)
-  currentBookedWeightKg  Int       @default(0)
-  currentBookedPieces    Int       @default(0)
-
-  bookings               Booking[]
-}
-
-model Booking {
-  id                     Int           @id @default(autoincrement())
-  refId                  String        @unique @default(cuid()) // Human-friendly, unique ID.
-  originAirportCode      String
-  destinationAirportCode String
-  pieces                 Int
-  weightKg               Int
-  status                 BookingStatus @default(BOOKED)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  customerId String // Changed to String to match User.id
-  customer   User    @relation(fields: [customerId], references: [id])
-  flightId   Int?
-  flight     Flight? @relation(fields: [flightId], references: [id])
-
-  events BookingEvent[]
-}
-
-model BookingEvent {
-  id        Int           @id @default(autoincrement())
-  eventType BookingStatus
-  location  String?
-  timestamp DateTime      @default(now())
-  details   Json? // To store optional flight info or other details.
-
-  bookingId Int
-  booking   Booking @relation(fields: [bookingId], references: [id])
+enum BookingStatus {
+  BOOKED
+  DEPARTED
+  ARRIVED
+  DELIVERED
+  CANCELLED
 }
 
 enum UserRole {
@@ -114,12 +21,36 @@ enum UserRole {
   ADMIN
 }
 
-enum BookingStatus {
-  BOOKED
-  DEPARTED
-  ARRIVED
-  DELIVERED
-  CANCELLED
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  role          String?
+  sessions      Session[]
+  accounts      Account[]
+  bookings      Booking[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
 }
 
 model Account {
@@ -150,4 +81,54 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Flight {
+  id                      Int      @id @default(autoincrement())
+  flightNumber           String   @map("flight_number")
+  airlineName            String   @map("airline_name")
+  awbPrefix              String   @map("awb_prefix")
+  originAirportCode      String   @map("origin_airport_code")
+  destinationAirportCode String   @map("destination_airport_code")
+  departureDatetime      DateTime @map("departure_datetime")
+  arrivalDatetime        DateTime @map("arrival_datetime")
+  maxCapacityWeightKg    Int?     @map("max_capacity_weight_kg")
+  maxCapacityPieces      Int?     @map("max_capacity_pieces")
+  overbookingPercentage  Int?     @map("overbooking_percentage")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+  bookings               Booking[]
+
+  @@map("flight")
+}
+
+model Booking {
+  id                      Int             @id @default(autoincrement())
+  awbNo                   String          @map("awb_no")
+  originAirportCode      String          @map("origin_airport_code")
+  destinationAirportCode String          @map("destination_airport_code")
+  pieces                 Int
+  weightKg               Int             @map("weight_kg")
+  status                 BookingStatus
+  createdAt              DateTime        @default(now()) @map("created_at")
+  updatedAt              DateTime        @updatedAt @map("updated_at")
+  customerId             String          @map("customer_id")
+  flightId               Int?            @map("flight_id")
+  customer               User            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  flight                 Flight?         @relation(fields: [flightId], references: [id])
+  events                 BookingEvent[]
+
+  @@map("booking")
+}
+
+model BookingEvent {
+  id        String        @id @default(cuid())
+  bookingId Int           @map("booking_id")
+  eventType BookingStatus @map("event_type")
+  location  String
+  timestamp DateTime
+  details   Json?
+  booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("booking_event")
 }
