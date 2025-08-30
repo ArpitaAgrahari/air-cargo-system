@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ApiResponse, PaginatedApiResponse } from '../types/api.types';
 import * as bookingService from '../services/booking.service';
 import { validateUpdateBookingRequest } from '../validators/booking.validator';
+import { BookingStatus } from '@prisma/client';
 
 export const getAllBookings = async (req: Request, res: Response) => {
   try {
@@ -9,8 +10,8 @@ export const getAllBookings = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
     const awb = req.query.awb as string | undefined;
 
-    const { bookings, total } = await bookingService.getAllBookingsPaginated(page, limit, awb);
-    const totalPages = Math.ceil(total / limit);
+    const { bookings, totalCount } = await bookingService.getAllBookingsPaginated(page, limit, awb);
+    const totalPages = Math.ceil(totalCount / limit);
 
     const response: PaginatedApiResponse<any> = {
       success: true,
@@ -18,7 +19,7 @@ export const getAllBookings = async (req: Request, res: Response) => {
       data: bookings,
       errors: null,
       pagination: {
-        totalItems: total,
+        totalItems: totalCount,
         totalPages,
         currentPage: page,
         pageSize: limit,
@@ -37,7 +38,7 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
 
     const updatedBooking = await bookingService.updateBookingAndAddEvent(
       awb_no,
-      new_status as any,
+      new_status as BookingStatus,
       location,
       flight_id
     );
@@ -50,6 +51,10 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
     };
     res.status(200).json(response);
   } catch (error: any) {
+    if (error.message.includes('Booking is currently being updated')) {
+      //409 Conflict if the lock could not be acquired
+      return res.status(409).json({ success: false, message: error.message, errors: { details: { message: error.message } } });
+    }
     if (error.message.includes('not found')) {
       return res.status(404).json({ success: false, message: 'Booking not found.', errors: { details: { message: error.message } } });
     }
