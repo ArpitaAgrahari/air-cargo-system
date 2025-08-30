@@ -1,5 +1,4 @@
 import { validateNumber, validateString } from './common.validator';
-import { BookingStatus } from '@prisma/client';
 
 export const validateCreateBookingRequest = (body: any) => {
   validateString(body.origin_airport_code, 'origin_airport_code');
@@ -13,8 +12,8 @@ export const validateUpdateBookingRequest = (body: any) => {
   validateString(body.awb_no, 'awb_no');
   validateString(body.new_status, 'new_status');
 
-  const validStatuses: BookingStatus[] = ['DEPARTED', 'ARRIVED', 'DELIVERED', 'CANCELLED'];
-  if (!validStatuses.includes(body.new_status)) {
+  const validStatuses = ['DEPARTED', 'ARRIVED', 'DELIVERED', 'CANCELLED'] as const;
+  if (!validStatuses.includes(body.new_status as any)) {
     throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
   }
 
