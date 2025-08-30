@@ -1,5 +1,3 @@
-
-
 import { PrismaClient, Booking, BookingStatus, Prisma } from '@prisma/client';
 import { generateAwbNumber } from '../utils/awb';
 import { redlock } from '../utils/redis'; 
