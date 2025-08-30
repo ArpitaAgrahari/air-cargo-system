@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client';
+import { USER_ROLES } from '../constants';
 import { validateString, validateEmail } from './common.validator';
 
 export const validateRegisterRequest = (body: any) => {
@@ -6,7 +6,7 @@ export const validateRegisterRequest = (body: any) => {
   validateEmail(body.email);
   validateString(body.password, 'password');
 
-  if (body.role && !Object.values(UserRole).includes(body.role)) {
+  if (body.role && !Object.values(USER_ROLES).includes(body.role)) {
     throw new Error('Invalid user role.');
   }
-};
+};  
