@@ -1,16 +1,15 @@
 import { findDirectFlights, findFlightsByOriginAndDate } from '../repositories/flight.repository';
-import { Flight } from '@prisma/client';
 
 interface TransitRoute {
-  leg1: Flight;
-  leg2: Flight;
+  leg1: any;
+  leg2: any;
 }
 
 export const getAvailableRoutes = async (
   origin: string,
   destination: string,
   date: string
-): Promise<{ directFlights: Flight[]; transitRoutes: TransitRoute[] }> => {
+): Promise<{ directFlights: any[]; transitRoutes: TransitRoute[] }> => {
   const departureDate = new Date(date);
 
   // Get direct flights
