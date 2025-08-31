@@ -6,7 +6,10 @@ export async function postRequest<TResponse = unknown, TBody = unknown>(
   body?: TBody,
   config?: AxiosRequestConfig
 ): Promise<ApiResponse<TResponse>> {
-  const response = await axios.post<ApiResponse<TResponse>>(url, body, config);
+  const response = await axios.post<ApiResponse<TResponse>>(`${process.env.NEXT_PUBLIC_API_URL}${url}`, body, {
+    ...config,
+    withCredentials: true,
+  });
   return response.data;
 }
 
