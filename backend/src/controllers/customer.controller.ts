@@ -101,7 +101,7 @@ export const createBooking = async (req: Request, res: Response) => {
     const response: ApiResponse<any> = {
       success: true,
       message: "Booking created successfully.",
-      data: { awb_no: newBooking.refId, status: newBooking.status },
+      data: { awb_no: newBooking.awbNo, status: newBooking.status },
       errors: null,
     };
     res.status(201).json(response);
