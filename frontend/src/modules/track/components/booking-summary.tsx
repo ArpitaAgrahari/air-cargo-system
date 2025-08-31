@@ -1,27 +1,16 @@
 import React from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/utils";
-import {
-  Package,
-  MapPin,
-  Calendar,
-  Weight,
-  Hash,
-} from "lucide-react";
+import { Package, MapPin, Calendar, Weight, Hash } from "lucide-react";
 import { formatDate } from "../utils";
+import { Booking } from "@/types/booking";
 
 interface BookingSummaryProps {
-  data: any; // You can type this more specifically based on your API response
+  data: Booking; // You can type this more specifically based on your API response
 }
 
 export const BookingSummary = ({ data }: BookingSummaryProps) => {
-
   return (
     <Card>
       <CardHeader>
@@ -36,7 +25,7 @@ export const BookingSummary = ({ data }: BookingSummaryProps) => {
             <Hash className="h-4 w-4 text-gray-500" />
             <div>
               <p className="text-sm text-gray-500">AWB Number</p>
-              <p className="font-semibold">{data.awb_no}</p>
+              <p className="font-semibold">{data.awbNo}</p>
             </div>
           </div>
 
@@ -45,7 +34,7 @@ export const BookingSummary = ({ data }: BookingSummaryProps) => {
             <div>
               <p className="text-sm text-gray-500">Route</p>
               <p className="font-semibold">
-                {data.origin_airport_code} → {data.destination_airport_code}
+                {data.originAirportCode} → {data.destinationAirportCode}
               </p>
             </div>
           </div>
@@ -55,7 +44,7 @@ export const BookingSummary = ({ data }: BookingSummaryProps) => {
             <div>
               <p className="text-sm text-gray-500">Weight & Pieces</p>
               <p className="font-semibold">
-                {data.weight_kg}kg ({data.pieces} pcs)
+                {data.weightKg}kg ({data.pieces} pcs)
               </p>
             </div>
           </div>
@@ -64,9 +53,7 @@ export const BookingSummary = ({ data }: BookingSummaryProps) => {
             <Calendar className="h-4 w-4 text-gray-500" />
             <div>
               <p className="text-sm text-gray-500">Created</p>
-              <p className="font-semibold">
-                {formatDate(data.created_at)}
-              </p>
+              <p className="font-semibold">{formatDate(data.createdAt)}</p>
             </div>
           </div>
 
@@ -74,9 +61,7 @@ export const BookingSummary = ({ data }: BookingSummaryProps) => {
             <Calendar className="h-4 w-4 text-gray-500" />
             <div>
               <p className="text-sm text-gray-500">Last Updated</p>
-              <p className="font-semibold">
-                {formatDate(data.updated_at)}
-              </p>
+              <p className="font-semibold">{formatDate(data.updatedAt)}</p>
             </div>
           </div>
 
