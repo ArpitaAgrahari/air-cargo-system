@@ -12,10 +12,17 @@ const app: Express = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+app.use(
+  cors({
+    origin: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
+
 app.all("/api/v1/auth/*", toNodeHandler(auth));
 
 app.use(express.json());
-app.use(cors());
 
 app.use(express.static(path.join(__dirname, "public")));
 
