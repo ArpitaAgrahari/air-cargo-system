@@ -92,6 +92,8 @@ model Flight {
   destinationAirportCode String   @map("destination_airport_code")
   departureDatetime      DateTime @map("departure_datetime")
   arrivalDatetime        DateTime @map("arrival_datetime")
+  currentBookedWeightKg  Int?     @map("current_booked_weight_kg")
+  currentBookedPieces    Int?     @map("current_booked_pieces")
   maxCapacityWeightKg    Int?     @map("max_capacity_weight_kg")
   maxCapacityPieces      Int?     @map("max_capacity_pieces")
   overbookingPercentage  Int?     @map("overbooking_percentage")
