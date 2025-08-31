@@ -1,11 +1,21 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Input, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label } from "@/components";
+import {
+  Input,
+  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Label,
+} from "@/components";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUpdateBooking } from "@/hooks";
 import { BookingStatus } from "@/types/booking";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const statusOptions: BookingStatus[] = [
   "BOOKED",
@@ -19,7 +29,7 @@ export default function UpdateBookingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const awbFromQuery = searchParams.get("awb") ?? "";
-
+  const queryClient = useQueryClient();
   const [awbNo, setAwbNo] = useState(awbFromQuery);
   const [newStatus, setNewStatus] = useState<BookingStatus>("BOOKED");
   const [location, setLocation] = useState("");
@@ -44,7 +54,8 @@ export default function UpdateBookingPage() {
       });
       if (res.success) {
         toast.success(`Updated ${res.data?.awb_no} to ${res.data?.status}`);
-        router.push(`/track?awb=${normalizedAwb}`);
+        queryClient.invalidateQueries({ queryKey: ["bookings"] });
+        router.push("/bookings");
       } else {
         toast.error(res.message ?? "Update failed");
       }
@@ -56,7 +67,10 @@ export default function UpdateBookingPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-xl">
       <h1 className="text-2xl font-semibold mb-6">Update Booking Status</h1>
-      <form onSubmit={onSubmit} className="space-y-4 bg-card rounded-md p-4 border">
+      <form
+        onSubmit={onSubmit}
+        className="space-y-4 bg-card rounded-md p-4 border"
+      >
         <div className="space-y-2">
           <Label htmlFor="awb">AWB Number</Label>
           <Input
@@ -69,13 +83,18 @@ export default function UpdateBookingPage() {
 
         <div className="space-y-2">
           <Label htmlFor="status">New Status</Label>
-          <Select value={newStatus} onValueChange={(v) => setNewStatus(v as BookingStatus)}>
+          <Select
+            value={newStatus}
+            onValueChange={(v) => setNewStatus(v as BookingStatus)}
+          >
             <SelectTrigger id="status">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -83,21 +102,38 @@ export default function UpdateBookingPage() {
 
         <div className="space-y-2">
           <Label htmlFor="location">Location</Label>
-          <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="DEL" />
+          <Input
+            id="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="DEL"
+          />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="flight">Flight ID (optional)</Label>
-          <Input id="flight" value={flightId} onChange={(e) => setFlightId(e.target.value)} placeholder="456" />
+          <Input
+            id="flight"
+            value={flightId}
+            onChange={(e) => setFlightId(e.target.value)}
+            placeholder="456"
+          />
         </div>
 
         <div className="flex gap-2 justify-end">
-          <Button type="button" variant="ghost" onClick={() => router.back()} disabled={isPending}>Cancel</Button>
-          <Button type="submit" disabled={isPending}>{isPending ? "Updating..." : "Update"}</Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => router.back()}
+            disabled={isPending}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Updating..." : "Update"}
+          </Button>
         </div>
       </form>
     </div>
   );
 }
-
-
