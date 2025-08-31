@@ -51,7 +51,7 @@ export const BookingsTable = () => {
     () => [
       {
         header: "AWB",
-        accessorKey: "awb_no",
+        accessorKey: "awbNo",
         cell: ({ getValue }) => (
           <span className="font-medium">{String(getValue())}</span>
         ),
@@ -60,8 +60,8 @@ export const BookingsTable = () => {
         header: "Route",
         cell: ({ row }) => (
           <span>
-            {row.original.origin_airport_code} →{" "}
-            {row.original.destination_airport_code}
+            {row.original.originAirportCode} →{" "}
+            {row.original.destinationAirportCode}
           </span>
         ),
       },
@@ -71,7 +71,7 @@ export const BookingsTable = () => {
       },
       {
         header: "Weight (kg)",
-        accessorKey: "weight_kg",
+        accessorKey: "weightKg",
       },
       {
         header: "Status",
@@ -88,30 +88,34 @@ export const BookingsTable = () => {
       },
       {
         header: "Created",
-        accessorKey: "created_at",
+        accessorKey: "createdAt",
         cell: ({ getValue }) => formatDate(String(getValue())),
       },
       {
         header: "Updated",
-        accessorKey: "updated_at",
+        accessorKey: "updatedAt",
         cell: ({ getValue }) => formatDate(String(getValue())),
       },
       {
         header: "Actions",
-        cell: ({ row }) => (
-          user.role === "STAFF" || user.role === "ADMIN" ? (
-            <Link href={`/bookings/update?awb=${row.original.awb_no}`}>
-              <Button variant="outline">Update</Button>
-            </Link>
+        cell: ({ row }) =>
+          user?.role === "STAFF" || user?.role === "ADMIN" ? (
+            row.original.status === "DELIVERED" ||
+            row.original.status === "CANCELLED" ? null : (
+              <Link
+                href={`/bookings/update?awb=${row.original.awbNo}`}
+              >
+                <Button variant="outline">Update</Button>
+              </Link>
+            )
           ) : (
-            <Link href={`/track?awb=${row.original.awb_no}`}>
+            <Link href={`/track?awb=${row.original.awbNo}`}>
               <Button variant="outline">Track</Button>
             </Link>
-          )
-        ),
+          ),
       },
     ],
-    [user.role]
+    [user?.role]
   );
 
   const table = useReactTable({

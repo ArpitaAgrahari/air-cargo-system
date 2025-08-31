@@ -13,7 +13,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-// import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectTrigger,
@@ -40,6 +39,8 @@ import {
   ArrowLeft,
   Search as SearchIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 const iata = z
   .string()
@@ -97,10 +98,9 @@ function FlightsSelect({
       <SelectContent>
         {flights.map((f) => (
           <SelectItem key={f.id} value={String(f.id)}>
-            {f.flight_number} • {f.origin_airport_code}→
-            {f.destination_airport_code} •{" "}
-            {format(new Date(f.departure_datetime), "HH:mm")} -{" "}
-            {format(new Date(f.arrival_datetime), "HH:mm")}
+            {f.flightNumber} • {f.originAirportCode}→{f.destinationAirportCode}{" "}
+            • {format(new Date(f.departureDatetime), "HH:mm")} -{" "}
+            {format(new Date(f.arrivalDatetime), "HH:mm")}
           </SelectItem>
         ))}
       </SelectContent>
@@ -109,6 +109,8 @@ function FlightsSelect({
 }
 
 export const BookingsForm = () => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const methods = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { pieces: 1, weight_kg: 1 },
@@ -116,7 +118,7 @@ export const BookingsForm = () => {
   });
   const { register, handleSubmit, formState, watch, setValue, trigger } =
     methods;
-  const { step, next, back, goto } = useWizard();
+  const { step, next, back } = useWizard();
 
   const origin = watch("origin");
   const destination = watch("destination");
@@ -150,7 +152,8 @@ export const BookingsForm = () => {
       toast.success("Booking created", {
         description: `AWB: ${res.data.awb_no}`,
       });
-      goto(0);
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      router.push("/bookings");
     } else {
       toast.error("Failed to create booking", { description: res.message });
     }
