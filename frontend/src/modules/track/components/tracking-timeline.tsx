@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/utils";
 import { Plane, Package, MapPin } from "lucide-react";
 import { formatDate } from "../utils";
-
+import { BookingEvent } from "@/types/booking";
+    
 interface TrackingTimelineProps {
-  timeline: any[]; // You can type this more specifically based on your API response
+  timeline: BookingEvent[]; // You can type this more specifically based on your API response
 }
 
 export const TrackingTimeline = ({ timeline }: TrackingTimelineProps) => {
