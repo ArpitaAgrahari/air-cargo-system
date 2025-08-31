@@ -75,7 +75,7 @@ export const TrackBooking = () => {
       {data?.success && data.data && (
         <div className="space-y-6">
           <BookingSummary data={data.data} />
-          <TrackingTimeline timeline={data.data.timeline} />
+          <TrackingTimeline timeline={data.data.events} />
         </div>
       )}
 
