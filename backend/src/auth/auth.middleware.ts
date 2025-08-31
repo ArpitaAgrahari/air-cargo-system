@@ -28,9 +28,15 @@ export const authenticate = async (
 };
 
 //authorize middleware
-export const authorize = (roles: (typeof USER_ROLES)[keyof typeof USER_ROLES][]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user || !req.user.role || !roles.includes(req.user.role)) {
+export const authorize = (
+  roles: (typeof USER_ROLES)[keyof typeof USER_ROLES][]
+) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const session = await auth.api.getSession({
+      headers: req.headers as any,
+    });
+    const userRole = session?.user.role;
+    if (!userRole || !roles.includes(userRole)) {
       const response: ApiResponse = {
         success: false,
         message: "Authorization failed. Insufficient permissions.",
