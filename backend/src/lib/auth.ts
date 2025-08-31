@@ -5,10 +5,11 @@ import { USER_ROLES } from "../constants";
 
 const prisma = new PrismaClient();
 
-export const  auth = betterAuth({
+export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  trustedOrigins: [process.env.TRUSTED_ORIGIN],
   emailAndPassword: {
     enabled: true,
   },

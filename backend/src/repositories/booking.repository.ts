@@ -6,9 +6,9 @@ export const createBooking = async (data: any): Promise<any> => {
   return prisma.booking.create({ data });
 };
 
-export const findBookingByRefId = async (refId: string): Promise<any | null> => {
-  return prisma.booking.findUnique({
-    where: { refId },
+export const findBookingByAwbNo = async (awbNo: string): Promise<any | null> => {
+  return prisma.booking.findFirst({
+    where: { awbNo },
     include: {
       customer: true,
       flight: true,
@@ -19,10 +19,15 @@ export const findBookingByRefId = async (refId: string): Promise<any | null> => 
   });
 };
 
-export const updateBookingStatus = async (refId: string, status: string): Promise<any> => {
-  return prisma.booking.update({
-    where: { refId },
-    data: { status },
+export const updateBookingStatus = async (awbNo: string, status: string): Promise<any> => {
+  return prisma.booking.findFirst({
+    where: { awbNo },
+  }).then((booking: any) => {
+    if (!booking) throw new Error('Booking not found');
+    return prisma.booking.update({
+      where: { id: booking.id },
+      data: { status },
+    });
   });
 };
 
@@ -37,6 +42,7 @@ export const addBookingEvent = async (
       bookingId,
       eventType,
       location,
+      timestamp: new Date(),
       details,
     },
   });
@@ -44,7 +50,7 @@ export const addBookingEvent = async (
 
 export const findBookings = async (page: number, limit: number, awb?: string): Promise<{ bookings: any[], total: number }> => {
   const skip = (page - 1) * limit;
-  const where: any = awb ? { refId: { contains: awb, mode: 'insensitive' } } : {};
+  const where: any = awb ? { awbNo: { contains: awb, mode: 'insensitive' } } : {};
 
   const [bookings, total] = await prisma.$transaction([
     prisma.booking.findMany({
