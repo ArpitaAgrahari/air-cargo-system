@@ -16,21 +16,11 @@ export interface CreateBookingResponse {
   status: BookingStatus;
 }
 
-export async function createBooking(body: CreateBookingBody): Promise<ApiResponse<CreateBookingResponse>> {
-  await new Promise((r) => setTimeout(r, 500));
-  const awbPrefix = String(100 + (body.flight_id % 900));
-  const awbSuffix = String(1_000_000 + Math.floor(Math.random() * 9_000_000)).slice(0, 8);
-
-  return {
-    success: true,
-    message: "Booking created",
-    data: {
-      awb_no: `${awbPrefix}-${awbSuffix}`,
-      status: "BOOKED",
-    },
-    errors: null,
-  };
-
-  // Real API call when backend is ready
-  // return postRequest<CreateBookingResponse, CreateBookingBody>(ENDPOINTS.CREATE_BOOKING, body);
+export async function createBooking(
+  body: CreateBookingBody
+): Promise<ApiResponse<CreateBookingResponse>> {
+  return postRequest<CreateBookingResponse, CreateBookingBody>(
+    ENDPOINTS.CREATE_BOOKING,
+    body
+  );
 }
