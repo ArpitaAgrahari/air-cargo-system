@@ -1,11 +1,11 @@
-import { PrismaClient, Booking, BookingStatus, Prisma } from '@prisma/client';
-import { generateAwbNumber } from '../utils/awb';
-import { redlock } from '../utils/redis'; 
+import { PrismaClient, Booking, BookingStatus, Prisma } from "@prisma/client";
+import { generateAwbNumber } from "../utils/awb";
+import { redlock } from "../utils/redis";
 
-const prisma = new PrismaClient(); 
+const prisma = new PrismaClient();
 
 export const createNewBooking = async (
-  customerId: string, 
+  customerId: string,
   origin: string,
   destination: string,
   pieces: number,
@@ -17,27 +17,42 @@ export const createNewBooking = async (
   });
 
   if (!flight) {
-    throw new Error('Flight not found.');
+    throw new Error("Flight not found.");
   }
 
-  // Capacity Check Logic 
-  const allowedCapacityWeight = flight.maxCapacityWeightKg * (1 + flight.overbookingPercentage);
-  const allowedCapacityPieces = flight.maxCapacityPieces * (1 + flight.overbookingPercentage);
+  // Capacity Check Logic
+  if (
+    !flight.maxCapacityWeightKg ||
+    !flight.maxCapacityPieces ||
+    !flight.overbookingPercentage
+  ) {
+    throw new Error("Flight capacity information is incomplete.");
+  }
+
+  const allowedCapacityWeight =
+    flight.maxCapacityWeightKg * (1 + flight.overbookingPercentage / 100);
+  const allowedCapacityPieces =
+    flight.maxCapacityPieces * (1 + flight.overbookingPercentage / 100);
+
+  const currentBookedWeight = (flight as any).currentBookedWeightKg || 0;
+  const currentBookedPieces = (flight as any).currentBookedPieces || 0;
 
   if (
-    flight.currentBookedWeightKg + weight > allowedCapacityWeight ||
-    flight.currentBookedPieces + pieces > allowedCapacityPieces
+    currentBookedWeight + weight > allowedCapacityWeight ||
+    currentBookedPieces + pieces > allowedCapacityPieces
   ) {
-    throw new Error('Requested cargo exceeds flight capacity (including overbooking limit).');
+    throw new Error(
+      "Requested cargo exceeds flight capacity (including overbooking limit)."
+    );
   }
 
-  const awb_no = generateAwbNumber(flight.awbPrefix || '000');
+  const awb_no = generateAwbNumber(flight.awbPrefix || "000");
 
   // ensure both booking creation and capacity update are atomic
   const newBooking = await prisma.$transaction(async (tx) => {
     const booking = await tx.booking.create({
       data: {
-        refId: awb_no,
+        awbNo: awb_no,
         originAirportCode: origin,
         destinationAirportCode: destination,
         pieces,
@@ -45,22 +60,23 @@ export const createNewBooking = async (
         status: BookingStatus.BOOKED,
         customer: { connect: { id: customerId } },
         flight: { connect: { id: flightId } },
-      }, 
+      },
     });
 
-    // Update flight's booked capacity 
+    // Update flight's booked capacity
     await tx.flight.update({
       where: { id: flightId },
       data: {
         currentBookedWeightKg: { increment: weight },
         currentBookedPieces: { increment: pieces },
-      },
+      } as any,
     });
 
     await tx.bookingEvent.create({
       data: {
         eventType: BookingStatus.BOOKED,
         location: origin,
+        timestamp: new Date(),
         details: {},
         booking: { connect: { id: booking.id } },
       },
@@ -73,9 +89,9 @@ export const createNewBooking = async (
 };
 
 export const getBookingHistory = async (awb_no: string) => {
-  return prisma.booking.findUnique({
-    where: { refId: awb_no },
-    include: { events: { orderBy: { timestamp: 'asc' } } },
+  return prisma.booking.findFirst({
+    where: { awbNo: awb_no },
+    include: { events: { orderBy: { timestamp: "asc" } } },
   });
 };
 
@@ -95,22 +111,25 @@ export const updateBookingAndAddEvent = async (
     lock = await redlock.acquire([resource], lockDuration);
 
     const updatedBooking = await prisma.$transaction(async (tx) => {
-      const booking = await tx.booking.findUnique({
-        where: { refId: awb_no },
+      const booking = await tx.booking.findFirst({
+        where: { awbNo: awb_no },
       });
       if (!booking) {
-        throw new Error('Booking not found.');
+        throw new Error("Booking not found.");
       }
       if (booking.status === newStatus) {
-        return booking; 
+        return booking;
       }
 
-      // Check for valid status 
-      if (booking.status === BookingStatus.ARRIVED && newStatus === BookingStatus.CANCELLED) {
-        throw new Error('Cannot cancel an arrived booking.');
+      // Check for valid status
+      if (
+        booking.status === BookingStatus.ARRIVED &&
+        newStatus === BookingStatus.CANCELLED
+      ) {
+        throw new Error("Cannot cancel an arrived booking.");
       }
 
-      // Capacity Release/Cancellation Logic 
+      // Capacity Release/Cancellation Logic
       if (newStatus === BookingStatus.CANCELLED) {
         if (booking.flightId) {
           await tx.flight.update({
@@ -118,14 +137,14 @@ export const updateBookingAndAddEvent = async (
             data: {
               currentBookedWeightKg: { decrement: booking.weightKg },
               currentBookedPieces: { decrement: booking.pieces },
-            },
+            } as any,
           });
         }
       }
 
       // Update the booking status
       const updatedBooking = await tx.booking.update({
-        where: { refId: awb_no },
+        where: { id: booking.id },
         data: {
           status: newStatus,
           updatedAt: new Date(),
@@ -139,6 +158,7 @@ export const updateBookingAndAddEvent = async (
         data: {
           eventType: newStatus,
           location: location || booking.originAirportCode,
+          timestamp: new Date(),
           details: eventDetails,
           booking: { connect: { id: booking.id } },
         },
@@ -148,10 +168,11 @@ export const updateBookingAndAddEvent = async (
     });
 
     return updatedBooking;
-
   } catch (error: any) {
-    if (error.name === 'LockAcquisitionError') {
-      throw new Error(`Booking ${awb_no} is currently being updated. Please try again later.`);
+    if (error.name === "LockAcquisitionError") {
+      throw new Error(
+        `Booking ${awb_no} is currently being updated. Please try again later.`
+      );
     }
     throw error;
   } finally {
@@ -162,23 +183,34 @@ export const updateBookingAndAddEvent = async (
   }
 };
 
-export const getBookingsForCustomer = async (customerId: string): Promise<Booking[]> => { 
-  return prisma.booking.findMany({ where: { customerId } });
-};
-
-export const getAllBookingsPaginated = async (page: number, limit: number, awb?: string) => {
+export const getAllBookingsPaginated = async (
+  page: number,
+  limit: number,
+  awb?: string,
+  customerId?: string,
+  role?: string
+) => {
   const skip = (page - 1) * limit;
-  const where = awb ? { refId: { contains: awb, mode: 'insensitive' as const } } : {};
+
+  let where: any = {};
+
+  if (awb) {
+    where.awbNo = { contains: awb, mode: "insensitive" as const };
+  }
+
+  if (role === "CUSTOMER" && customerId) {
+    where.customerId = customerId;
+  }
+
   const [bookings, totalCount] = await prisma.$transaction([
     prisma.booking.findMany({
       skip,
       take: limit,
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: { events: true },
     }),
     prisma.booking.count({ where }),
   ]);
   return { bookings, totalCount };
 };
-
