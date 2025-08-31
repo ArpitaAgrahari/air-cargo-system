@@ -14,23 +14,24 @@ export interface Customer {
 }
 
 export interface Booking {
-  id: string;
-  awb_no: string;
-  origin_airport_code: string;
-  destination_airport_code: string;
+  id: number;
+  awbNo: string;
+  originAirportCode: string;
+  destinationAirportCode: string;
   pieces: number;
-  weight_kg: number;
+  weightKg: number;
   status: BookingStatus;
-  created_at: string;
-  updated_at: string;
-  customer_id: string;
+  createdAt: string;
+  updatedAt: string;
+  customerId: string;
+  flightId: number;
   sender: Customer;
   receiver: Customer;
 }
 
 export interface BookingEvent {
   id: string;
-  bookingId: string;
+  bookingId: number;
   eventType: BookingStatus;
   location: string;
   timestamp: string;
@@ -38,5 +39,5 @@ export interface BookingEvent {
 }
 
 export interface BookingHistory extends Booking {
-  timeline: BookingEvent[];
+  events: BookingEvent[];
 }
